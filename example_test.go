@@ -20,7 +20,7 @@ package fft_test
 
 import (
 	"fmt"
-	"github.com/scientificgo/scigo/fft"
+	"github.com/scientificgo/fft"
 	"math/cmplx"
 )
 
