@@ -20,8 +20,8 @@ package fft_test
 
 import (
 	"fmt"
-	. "github.com/scientificgo/scigo/fft"
-	"github.com/scientificgo/scigo/utils"
+	. "github.com/scientificgo/fft"
+	"github.com/scientificgo/utils"
 	"math"
 	"math/rand"
 	"testing"

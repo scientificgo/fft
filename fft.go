@@ -20,6 +20,88 @@ package fft
 
 import "math"
 
+// Fft returns a discrete Fourier transform of x.
+// It does not check x for NaN or Inf values; these checks should be done separately.
+func Fft(x []complex128) []complex128 {
+	n := len(x)
+	if n < 2 {
+		return x
+	}
+	var res []complex128
+	switch p := base(n); p {
+	case 2:
+		res = fftStockham(x, 1)
+	case 3:
+		res = fftRad3(x, 1)
+	case 5:
+		res = fftRad5(x, 1)
+	case 6:
+		res = fftRad6(x, 1)
+	case 7:
+		res = fftRad7(x, 1)
+	default:
+		res = fftBluestein(x)
+	}
+
+	return res
+}
+
+// Ifft returns the inverse discrete Fourier transform of x.
+// It does not check x for NaN or Inf values; these checks should be done separately.
+func Ifft(x []complex128) []complex128 {
+	n := len(x)
+
+	if n < 2 {
+		return x
+	}
+
+	var res []complex128
+	var scaled bool
+	switch p := base(n); p {
+	case 2:
+		res = fftStockham(x, -1)
+	case 3:
+		res = fftRad3(x, -1)
+	case 5:
+		res = fftRad5(x, -1)
+	case 6:
+		res = fftRad6(x, -1)
+	case 7:
+		res = fftRad7(x, -1)
+	default:
+		res = ifftBluestein(x)
+		scaled = true
+	}
+
+	if !scaled {
+		for i := 0; i < n; i++ {
+			res[i] *= complex(1/float64(n), 0)
+		}
+	}
+
+	return res
+}
+
+// base returns the smallest integer (up to 7, the max CT radix) such that n = base**m
+// for some integer m, or n if there is none.
+func base(n int) int {
+	if n&(n-1) == 0 {
+		return 2
+	}
+
+	for i := 3; i <= 7; i++ {
+		n2 := n
+		for n2%i == 0 {
+			n2 /= i
+		}
+		if n2 == 1 {
+			return i
+		}
+	}
+
+	return n
+}
+
 // fftStockham returns the discrete Fourier transform or its unscaled inverse of x for
 // flag = 1 or -1 respectively. It is very efficient but limited to len(x) = 2**n.
 //
@@ -289,86 +371,4 @@ func ifftBluestein(x []complex128) []complex128 {
 		y[i] = complex(real(yi)/float64(n), -imag(yi)/float64(n))
 	}
 	return y
-}
-
-// Fft returns a discrete Fourier transform of x.
-// It does not check x for NaN or Inf values; these checks should be done separately.
-func Fft(x []complex128) []complex128 {
-	n := len(x)
-	if n < 2 {
-		return x
-	}
-	var res []complex128
-	switch p := base(n); p {
-	case 2:
-		res = fftStockham(x, 1)
-	case 3:
-		res = fftRad3(x, 1)
-	case 5:
-		res = fftRad5(x, 1)
-	case 6:
-		res = fftRad6(x, 1)
-	case 7:
-		res = fftRad7(x, 1)
-	default:
-		res = fftBluestein(x)
-	}
-
-	return res
-}
-
-// Ifft returns the inverse discrete Fourier transform of x.
-// It does not check x for NaN or Inf values; these checks should be done separately.
-func Ifft(x []complex128) []complex128 {
-	n := len(x)
-
-	if n < 2 {
-		return x
-	}
-
-	var res []complex128
-	var scaled bool
-	switch p := base(n); p {
-	case 2:
-		res = fftStockham(x, -1)
-	case 3:
-		res = fftRad3(x, -1)
-	case 5:
-		res = fftRad5(x, -1)
-	case 6:
-		res = fftRad6(x, -1)
-	case 7:
-		res = fftRad7(x, -1)
-	default:
-		res = ifftBluestein(x)
-		scaled = true
-	}
-
-	if !scaled {
-		for i := 0; i < n; i++ {
-			res[i] *= complex(1/float64(n), 0)
-		}
-	}
-
-	return res
-}
-
-// base returns the smallest integer (up to 7, the max CT radix) such that n = base**m
-// for some integer m, or n if there is none.
-func base(n int) int {
-	if n&(n-1) == 0 {
-		return 2
-	}
-
-	for i := 3; i <= 7; i++ {
-		n2 := n
-		for n2%i == 0 {
-			n2 /= i
-		}
-		if n2 == 1 {
-			return i
-		}
-	}
-
-	return n
 }
