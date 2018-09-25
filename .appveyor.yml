@@ -1,12 +1,13 @@
 version: 1.0.{build}
 
-clone_folder: c:\gopath\src\github.com\scientificgo\fft
-
 environment:
   GOPATH: c:\gopath
 
+install:
+- cmd: go get -t -v ./...
+
 build_script:
-- cmd: go build -i
+- cmd: go build
 
 test_script:
 - cmd: go test ./... -v -race -coverprofile=coverage.txt -covermode=atomic -timeout 0
