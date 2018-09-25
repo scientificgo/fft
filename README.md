@@ -5,7 +5,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/r24vkg170wjd5ks9?svg=true)](https://ci.appveyor.com/project/jdparkinson93/fft)
 [![Maintainability](https://api.codeclimate.com/v1/badges/cbe6a28a2c947437b6c1/maintainability)](https://codeclimate.com/github/scientificgo/fft/maintainability)
 
-# FFT
+# fft
 
 Fast fourier transform and related functions for [Go](https://golang.org).
 
