@@ -1,0 +1,10 @@
+*.txt
+*.swp
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+**/tmp
