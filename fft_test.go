@@ -86,7 +86,7 @@ func TestFft(t *testing.T) {
 
 var GlobalI int
 
-func benchmarkFft(f func([]complex128) []complex128, b *testing.B) {
+func benchmark(f func([]complex128) []complex128, b *testing.B) {
 	var x []complex128
 	for _, ns := range cases {
 		var y []complex128
@@ -104,5 +104,5 @@ func benchmarkFft(f func([]complex128) []complex128, b *testing.B) {
 	}
 }
 
-func BenchmarkFft(b *testing.B)  { benchmarkFft(Fft, b) }
-func BenchmarkIfft(b *testing.B) { benchmarkFft(Ifft, b) }
+func BenchmarkFft(b *testing.B)  { benchmark(Fft, b) }
+func BenchmarkIfft(b *testing.B) { benchmark(Ifft, b) }
