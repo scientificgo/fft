@@ -7,8 +7,12 @@
 
 # fft
 
-Fast fourier transform and related functions for [Go](https://golang.org).
+Package `fft` provides fast Fourier transforms snd inverses in [Go](https://golang.org). Please consult the [GoDoc](https://godoc.org/github.com/scientificgo/fft) page for specific details and visit [ScientificGo](https://scientificgo.org) to see more scientific packages for Go.
+
+### Installation
+
+`go get github.com/scientificgo/fft`
 
 ### Usage
 
-`go install -i scientificgo/fft`
+`import github.com/scientificgo/fft`
