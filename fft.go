@@ -13,22 +13,22 @@ func Fft(x []complex128) []complex128 {
 	if n < 2 {
 		return x
 	}
-	var res []complex128
+	//	var res []complex128
 	switch r := radix(n); r {
 	case 2:
-		res = stockham(x, 1)
+		x = stockham(x, 1)
 	case 3:
-		res = radix3(x, 1)
+		x = radix3(x, 1)
 	case 5:
-		res = radix5(x, 1)
+		x = radix5(x, 1)
 	case 6:
-		res = radix6(x, 1)
+		x = radix6(x, 1)
 	case 7:
-		res = radix7(x, 1)
+		x = radix7(x, 1)
 	default:
-		res = bluesteinFwd(x)
+		x = bluesteinFwd(x)
 	}
-	return res
+	return x
 }
 
 // Ifft returns the inverse discrete Fourier transform of x.
@@ -56,16 +56,13 @@ func Ifft(x []complex128) []complex128 {
 		goto end
 	}
 
-	rescale(res, float64(n))
+	// Rescale by n.
+	for i := 0; i < n; i++ {
+		res[i] = complex(real(res[i])/float64(n), imag(res[i])/float64(n))
+	}
 
 end:
 	return res
-}
-
-func rescale(x []complex128, scale float64) {
-	for i := 0; i < len(x); i++ {
-		x[i] = complex(real(x[i])/scale, imag(x[i])/scale)
-	}
 }
 
 // radix returns the smallest integer r ≤ max_radix such that n = r**p
