@@ -13,72 +13,84 @@ import (
 	"testing"
 )
 
-const tol = 6
+//
+// Setup
+//
 
-// dftDirect returns the DFT (flag=1) or inverse DFT (flag = -1) of x using the direct O(n**2) method.
+const TOL = 6 // significant figures
+
+var CASES = [][]int{
+	{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384},
+	{3, 9, 27, 81, 243, 729, 2187, 6561, 19683},
+	{5, 25, 125, 625, 3125, 15625},
+	{6, 36, 216, 1296, 7776},
+	{7, 49, 343, 2401, 16807},
+	{1, 17, 31, 61, 127, 257, 509, 1021, 2053, 4093},
+}
+
+var X []complex128
+
+func init() {
+	max := 1
+	for _, c := range CASES {
+		for _, n := range c {
+			if n > max {
+				max = n
+			}
+		}
+	}
+	X = make([]complex128, max)
+	for i := 0; i < max; i++ {
+		X[i] = complex(rand.NormFloat64(), rand.NormFloat64())
+	}
+}
+
+//
+// Tests
+//
+
+// dft_direct returns the DFT (s=1) or inverse DFT (s=-1) of x using the direct O(n**2) method.
 // It is used to validate the values produced by the more efficient FFT routines exposed in the package fft API.
-func dftDirect(x []complex128, flag int) []complex128 {
-	if flag != -1 && flag != 1 {
+func dft_direct(x []complex128, s int) []complex128 {
+	if s*s != 1 {
 		return nil
 	}
-
 	n := len(x)
 	res := make([]complex128, n)
 	for i := 0; i < n; i++ {
 		for k := 0; k < n; k++ {
-			wi, wr := math.Sincos(-2 * math.Pi * float64(flag*k*i) / float64(n))
-			res[k] += x[i] * complex(wr, wi)
+			wim, wre := math.Sincos(-2 * math.Pi * float64(s*k*i) / float64(n))
+			res[k] += x[i] * complex(wre, wim)
+		}
+	}
+	if s < 0 {
+		for i := 0; i < n; i++ {
+			res[i] /= complex(float64(n), 0)
 		}
 	}
 	return res
 }
 
-func periodogramDirect(x []complex128) []float64 {
-	n := len(x)
-	p := make([]float64, n)
-	for i, f := range dftDirect(x, 1) {
-		re, im := real(f), imag(f)
-		p[i] = (re*re + im*im) / float64(n)
-	}
-	return p
-}
-
-var cases = [][]int{
-	{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096},
-	{3, 9, 27, 81, 243, 729, 2187, 6561},
-	{5, 25, 125, 625, 3125, 15625},
-	{6, 36, 216, 1296, 7776},
-	{7, 49, 343, 2401},
-	{1, 17, 31, 61, 127, 257, 509, 1021, 2053, 4093},
-}
-
-func TestFft(t *testing.T) {
-	var x []complex128
-	for _, ns := range cases {
+func test(t *testing.T, f func([]complex128) []complex128, s int) {
+	for _, ns := range CASES {
 		for _, n := range ns {
-			for len(x) < n {
-				x = append(x, complex(100*rand.NormFloat64(), 100*rand.NormFloat64()))
-			}
-			xn := x[:n]
-			t.Run(fmt.Sprintf("n=%v", n), func(t *testing.T) {
-				direct := dftDirect(xn, 1)
-				fft := Fft(xn)
-				if !utils.EqualComplex128s(fft, direct, tol) {
-					t.Errorf("Fft(%v) = %v, want %v", xn, fft, direct)
-				}
-				xx := Ifft(fft)
-				if !utils.EqualComplex128s(xx, xn, tol) {
-					t.Errorf("Ifft(%v) = %v, want %v", fft, xx, xn)
-				}
-				pdirect := periodogramDirect(xn)
-				p := Periodogram(xn)
-				if !utils.EqualFloat64s(p, pdirect, tol) {
-					t.Errorf("PSD(%v) = %v, want %v", xn, p, pdirect)
+			t.Run(fmt.Sprintf("%v-%v", ns[0], n), func(t *testing.T) {
+				direct := dft_direct(X[:n], s)
+				res := f(X[:n])
+				if !utils.EqualComplex128s(res, direct, TOL) {
+					fname := "Fft"
+					if s < 0 {
+						fname = "Ifft"
+					}
+					t.Errorf("%v([%v,...,%v]) = [%v,...,%v], want [%v,...,%v]", fname, X[0], X[n-1], res[0], res[n-1], direct[0], direct[n-1])
 				}
 			})
 		}
 	}
 }
+
+func TestFft(t *testing.T)  { test(t, Fft, 1) }
+func TestIfft(t *testing.T) { test(t, Ifft, -1) }
 
 //
 // Benchmarks
@@ -86,17 +98,13 @@ func TestFft(t *testing.T) {
 
 var GlobalI int
 
-func benchmark(f func([]complex128) []complex128, b *testing.B) {
-	var x []complex128
-	for _, ns := range cases {
+func benchmark(b *testing.B, f func([]complex128) []complex128) {
+	for _, ns := range CASES {
 		var y []complex128
 		for _, n := range ns {
-			for len(x) < n {
-				x = append(x, complex(100*rand.NormFloat64(), 100*rand.NormFloat64()))
-			}
 			b.Run(fmt.Sprintf("%v-%v", ns[0], n), func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					y = f(x[:n])
+					y = f(X[:n])
 				}
 				GlobalI = len(y)
 			})
@@ -104,5 +112,5 @@ func benchmark(f func([]complex128) []complex128, b *testing.B) {
 	}
 }
 
-func BenchmarkFft(b *testing.B)  { benchmark(Fft, b) }
-func BenchmarkIfft(b *testing.B) { benchmark(Ifft, b) }
+func BenchmarkFft(b *testing.B)  { benchmark(b, Fft) }
+func BenchmarkIfft(b *testing.B) { benchmark(b, Ifft) }
