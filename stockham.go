@@ -3,11 +3,11 @@ package fft
 import "math"
 
 // stockham returns the discrete Fourier transform or its unscaled inverse of x for
-// flag = 1 or -1 respectively. It is very efficient but limited to len(x) = 2**n.
+// s = 1 or -1 respectively. It is very efficient but limited to len(x) = 2**n.
 //
 // Stockham autosort algorithm based on
 // "Computational Frameworks for the Fast Fourier Transform", Charles Van Loan, SIAM, 1992.
-func stockham(x []complex128, flag int) []complex128 {
+func stockham(x []complex128, s int) []complex128 {
 	n := len(x)
 	n2 := n >> 1
 
@@ -19,8 +19,8 @@ func stockham(x []complex128, flag int) []complex128 {
 	for r, l := n2, 1; r >= 1; r >>= 1 {
 		y, tmp = tmp, y
 
-		// Calculate twiddle factor w = exp(-flag*iπ/l) components (wr, wi).
-		wi, wr := math.Sincos(-float64(flag) * math.Pi / float64(l))
+		// Calculate twiddle factor w = exp(-s*iπ/l) components (wr, wi).
+		wim, wre := math.Sincos(-float64(s) * math.Pi / float64(l))
 
 		for j, wj := 0, complex(1, 0); j < l; j++ {
 			jrs := j * (r << 1)
@@ -31,7 +31,7 @@ func stockham(x []complex128, flag int) []complex128 {
 				m++
 			}
 			// Increment twiddle factor using w**j+1 = w**j * w.
-			wj *= complex(wr, wi)
+			wj *= complex(wre, wim)
 		}
 		l <<= 1
 	}
