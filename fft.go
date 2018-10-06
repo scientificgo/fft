@@ -4,7 +4,7 @@
 
 package fft
 
-const max_radix = 7
+const maxRadix = 7
 
 // Fft returns a discrete Fourier transform of x.
 // It does not check x for NaN or Inf values; these checks should be done separately.
@@ -64,7 +64,7 @@ end:
 
 func rescale(x []complex128, scale float64) {
 	for i := 0; i < len(x); i++ {
-		x[i] *= complex(1/scale, 0)
+		x[i] = complex(real(x[i])/scale, imag(x[i])/scale)
 	}
 }
 
@@ -75,7 +75,7 @@ func radix(n int) int {
 		return 2
 	}
 
-	for i := 3; i <= max_radix; i++ {
+	for i := 3; i <= maxRadix; i++ {
 		n2 := n
 		for n2%i == 0 {
 			n2 /= i
