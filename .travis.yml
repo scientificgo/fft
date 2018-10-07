@@ -9,10 +9,17 @@ go:
   - tip
 
 install:
-  - go get -t -v scientificgo.org/fft
+  - go get -t -v ./...
+  - go build
   
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+
 script:
-  - go test scientificgo.org/fft -v -race -coverprofile=coverage.txt -covermode=atomic -timeout 0
+  - go test ./... -v -race -coverprofile=coverage.txt -covermode=atomic -timeout 0
 
 after_success:
   - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
