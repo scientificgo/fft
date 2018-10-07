@@ -3,4 +3,4 @@
 // license that can be found in the LICENSE file.
 
 // Package fft provides an efficient fast Fourier transform implementation.
-package fft
+package fft // import "scientificgo.org/fft"

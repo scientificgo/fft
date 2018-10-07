@@ -6,10 +6,10 @@ package fft_test
 
 import (
 	"fmt"
-	. "github.com/scientificgo/fft"
-	"github.com/scientificgo/utils"
 	"math"
 	"math/rand"
+	. "scientificgo.org/fft"
+	"scientificgo.org/testutils"
 	"testing"
 )
 
@@ -77,7 +77,7 @@ func test(t *testing.T, f func([]complex128) []complex128, s int) {
 			t.Run(fmt.Sprintf("%v-%v", ns[0], n), func(t *testing.T) {
 				direct := dft_direct(X[:n], s)
 				res := f(X[:n])
-				if !utils.EqualComplex128s(res, direct, TOL) {
+				if !testutils.EqualComplex128s(res, direct, TOL) {
 					fname := "Fft"
 					if s < 0 {
 						fname = "Ifft"
