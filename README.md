@@ -1,3 +1,8 @@
+---
+layout: default
+title: fft
+---
+
 [![GoDoc](https://godoc.org/github.com/scientificgo/fft?status.svg)](https://godoc.org/github.com/scientificgo/fft)
 [![Go Report Card](https://goreportcard.com/badge/github.com/scientificgo/fft)](https://goreportcard.com/report/github.com/scientificgo/fft)
 [![Coverage](https://codecov.io/gh/scientificgo/fft/branch/master/graph/badge.svg)](https://codecov.io/gh/scientificgo/fft)
