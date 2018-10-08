@@ -8,10 +8,15 @@ go:
   - 1.x
   - tip
 
+env:
+  global:
+    CC_TEST_REPORTER_ID=a2619ddcaef9fe12ec272542654eb6f3ef45e7e2c0dc7177d1e251ae02a23af5
+
 install:
-  - go get -t -v ./...
-  - go build
-  
+  - mkdir -p $GOPATH/src/scientificgo.org
+  - mv $GOPATH/src/github.com/scientificgo/fft $GOPATH/src/scientificgo.org/fft
+  - cd $GOPATH/src/scientificgo.org/fft
+
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
