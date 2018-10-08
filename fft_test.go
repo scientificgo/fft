@@ -17,7 +17,7 @@ import (
 // Setup
 //
 
-const tol = 9 // significant figures
+const tol = 8 // significant figures
 
 var cases = [][]int{
 	{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384},
