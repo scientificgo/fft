@@ -17,9 +17,9 @@ import (
 // Setup
 //
 
-const TOL = 6 // significant figures
+const tol = 9 // significant figures
 
-var CASES = [][]int{
+var cases = [][]int{
 	{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384},
 	{3, 9, 27, 81, 243, 729, 2187, 6561, 19683},
 	{5, 25, 125, 625, 3125, 15625},
@@ -28,20 +28,34 @@ var CASES = [][]int{
 	{1, 17, 31, 61, 127, 257, 509, 1021, 2053, 4093},
 }
 
-var X []complex128
+var inputs [][]complex128
+var labels []string
 
 func init() {
 	max := 1
-	for _, c := range CASES {
+	ncases := 0
+	for _, c := range cases {
 		for _, n := range c {
 			if n > max {
 				max = n
 			}
+			ncases++
 		}
 	}
-	X = make([]complex128, max)
+	x := make([]complex128, max)
 	for i := 0; i < max; i++ {
-		X[i] = complex(rand.NormFloat64(), rand.NormFloat64())
+		x[i] = complex(rand.NormFloat64(), rand.NormFloat64())
+	}
+
+	inputs = make([][]complex128, ncases)
+	labels = make([]string, ncases)
+	ncase := 0
+	for _, c := range cases {
+		for _, n := range c {
+			labels[ncase] = fmt.Sprintf("%v-%v", c[0], n)
+			inputs[ncase] = x[:n]
+			ncase++
+		}
 	}
 }
 
@@ -49,13 +63,13 @@ func init() {
 // Tests
 //
 
-// dft_direct returns the DFT (s=1) or inverse DFT (s=-1) of x using the direct O(n**2) method.
-// It is used to validate the values produced by the more efficient FFT routines exposed in the package fft API.
-func dft_direct(x []complex128, s int) []complex128 {
-	if s*s != 1 {
-		return nil
-	}
+func dftDirect(x []complex128, inverse bool) []complex128 {
 	n := len(x)
+	s := 1
+	if inverse {
+		s = -1
+	}
+
 	res := make([]complex128, n)
 	for i := 0; i < n; i++ {
 		for k := 0; k < n; k++ {
@@ -71,46 +85,32 @@ func dft_direct(x []complex128, s int) []complex128 {
 	return res
 }
 
-func test(t *testing.T, f func([]complex128) []complex128, s int) {
-	for _, ns := range CASES {
-		for _, n := range ns {
-			t.Run(fmt.Sprintf("%v-%v", ns[0], n), func(t *testing.T) {
-				direct := dft_direct(X[:n], s)
-				res := f(X[:n])
-				if !testutils.EqualComplex128s(res, direct, TOL) {
-					fname := "Fft"
-					if s < 0 {
-						fname = "Ifft"
-					}
-					t.Errorf("%v([%v,...,%v]) = [%v,...,%v], want [%v,...,%v]", fname, X[0], X[n-1], res[0], res[n-1], direct[0], direct[n-1])
-				}
-			})
-		}
-	}
+func test(t *testing.T, inverse bool) {
+	var f func(*testing.T, float64, []string, [](func([]complex128) []complex128), [][]complex128)
+	testutils.GenerateTest(&f)
+
+	dft := func(x []complex128) []complex128 { return dftDirect(x, inverse) }
+	fft := func(x []complex128) []complex128 { return Fft(x, inverse) }
+
+	f(t, tol, labels, [](func([]complex128) []complex128){fft, dft}, inputs)
 }
 
-func TestFft(t *testing.T)  { test(t, Fft, 1) }
-func TestIfft(t *testing.T) { test(t, Ifft, -1) }
+func TestFft(t *testing.T)  { test(t, false) }
+func TestIfft(t *testing.T) { test(t, true) }
 
 //
 // Benchmarks
 //
 
-var GlobalI int
-
-func benchmark(b *testing.B, f func([]complex128) []complex128) {
-	for _, ns := range CASES {
-		var y []complex128
-		for _, n := range ns {
-			b.Run(fmt.Sprintf("%v-%v", ns[0], n), func(b *testing.B) {
-				for i := 0; i < b.N; i++ {
-					y = f(X[:n])
-				}
-				GlobalI = len(y)
-			})
-		}
+func benchmark(b *testing.B, f func([]complex128, bool) []complex128, inverse bool) {
+	for ncase := 0; ncase < len(labels); ncase++ {
+		b.Run(labels[ncase], func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_ = f(inputs[ncase], inverse)
+			}
+		})
 	}
 }
 
-func BenchmarkFft(b *testing.B)  { benchmark(b, Fft) }
-func BenchmarkIfft(b *testing.B) { benchmark(b, Ifft) }
+func BenchmarkFft(b *testing.B)   { benchmark(b, Fft, false) }
+func BenchmarkIffti(b *testing.B) { benchmark(b, Fft, true) }
