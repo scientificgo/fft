@@ -6,8 +6,15 @@ package fft
 
 const maxRadix = 7
 
-// Fft returns the inverse discrete Fourier transform of x.
-// It does not check x for NaN or Inf values; these checks should be done separately.
+// Fft returns the discrete Fourier transform of x or the (normalised) inverse
+// transform if inverse is true. The algorithm is most efficient when the length
+// of x is a power of 2, 3, 5, 6 or 7 (in that order).
+//
+// If the length of x is a power of greater than 7 or is prime, then Bluestein's
+// algorithm is used to transform the data and retain O(NlogN) performance.
+//
+// Fft does not check for NaN or Inf values and will produce erroneous results
+// if these are present in x.
 func Fft(x []complex128, inverse bool) []complex128 {
 	n := len(x)
 	if n < 2 {
