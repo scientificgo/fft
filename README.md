@@ -20,4 +20,4 @@ Package `fft` provides fast Fourier transforms snd inverses in [Go](https://gola
 
 ### Usage
 
-`import scientificgo.org/fft`
+`import "scientificgo.org/fft"`
