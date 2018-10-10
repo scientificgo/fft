@@ -13,13 +13,9 @@ import (
 	"testing"
 )
 
-//
-// Setup
-//
+const acc = 8 // significant figures
 
-const tol = 8 // significant figures
-
-var cases = [][]int{
+var nslices = [][]int{
 	{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384},
 	{3, 9, 27, 81, 243, 729, 2187, 6561, 19683},
 	{5, 25, 125, 625, 3125, 15625},
@@ -28,40 +24,10 @@ var cases = [][]int{
 	{1, 17, 31, 61, 127, 257, 509, 1021, 2053, 4093},
 }
 
-var inputs [][]complex128
-var labels []string
-
-func init() {
-	max := 1
-	ncases := 0
-	for _, c := range cases {
-		for _, n := range c {
-			if n > max {
-				max = n
-			}
-			ncases++
-		}
-	}
-	x := make([]complex128, max)
-	for i := 0; i < max; i++ {
-		x[i] = complex(rand.NormFloat64(), rand.NormFloat64())
-	}
-
-	inputs = make([][]complex128, ncases)
-	labels = make([]string, ncases)
-	ncase := 0
-	for _, c := range cases {
-		for _, n := range c {
-			labels[ncase] = fmt.Sprintf("%v-%v", c[0], n)
-			inputs[ncase] = x[:n]
-			ncase++
-		}
-	}
-}
-
-//
-// Tests
-//
+var cases = []struct {
+	Label string
+	Input []complex128
+}{}
 
 func dftDirect(x []complex128, inverse bool) []complex128 {
 	n := len(x)
@@ -69,7 +35,6 @@ func dftDirect(x []complex128, inverse bool) []complex128 {
 	if inverse {
 		s = -1
 	}
-
 	res := make([]complex128, n)
 	for i := 0; i < n; i++ {
 		for k := 0; k < n; k++ {
@@ -85,32 +50,57 @@ func dftDirect(x []complex128, inverse bool) []complex128 {
 	return res
 }
 
-func test(t *testing.T, inverse bool) {
-	var f func(*testing.T, float64, []string, [](func([]complex128) []complex128), [][]complex128)
-	testutils.GenerateTest(&f)
+//
+// Setup
+//
 
-	dft := func(x []complex128) []complex128 { return dftDirect(x, inverse) }
-	fft := func(x []complex128) []complex128 { return Fft(x, inverse) }
+func init() {
+	max := 1
+	ncases := 0
+	for _, nslice := range nslices {
+		for _, n := range nslice {
+			if n > max {
+				max = n
+			}
+			ncases++
+		}
+	}
+	x := make([]complex128, max)
+	for i := 0; i < max; i++ {
+		x[i] = complex(rand.NormFloat64(), rand.NormFloat64())
+	}
 
-	f(t, tol, labels, [](func([]complex128) []complex128){fft, dft}, inputs)
+	for _, nslice := range nslices {
+		for _, n := range nslice {
+			cases = append(cases, struct {
+				Label string
+				Input []complex128
+			}{fmt.Sprintf("%v-%v", nslice[0], n), x[:n]})
+		}
+	}
 }
 
-func TestFft(t *testing.T)  { test(t, false) }
-func TestIfft(t *testing.T) { test(t, true) }
+//
+// Test
+//
 
-//
-// Benchmarks
-//
+func test(t *testing.T, inverse bool) {
+	dft := func(x []complex128) []complex128 { return dftDirect(x, inverse) }
+	fft := func(x []complex128) []complex128 { return Fft(x, inverse) }
+	testutils.Test(t, acc, [2](func([]complex128) []complex128){fft, dft}, cases)
+}
 
 func benchmark(b *testing.B, f func([]complex128, bool) []complex128, inverse bool) {
-	for ncase := 0; ncase < len(labels); ncase++ {
-		b.Run(labels[ncase], func(b *testing.B) {
+	for ncase := 0; ncase < len(cases); ncase++ {
+		b.Run(cases[ncase].Label, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				_ = f(inputs[ncase], inverse)
+				_ = f(cases[ncase].Input, inverse)
 			}
 		})
 	}
 }
 
+func TestFft(t *testing.T)        { test(t, false) }
+func TestIfft(t *testing.T)       { test(t, true) }
 func BenchmarkFft(b *testing.B)   { benchmark(b, Fft, false) }
 func BenchmarkIffti(b *testing.B) { benchmark(b, Fft, true) }
