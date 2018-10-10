@@ -56,13 +56,11 @@ func dftDirect(x []complex128, inverse bool) []complex128 {
 
 func init() {
 	max := 1
-	ncases := 0
 	for _, nslice := range nslices {
 		for _, n := range nslice {
 			if n > max {
 				max = n
 			}
-			ncases++
 		}
 	}
 	x := make([]complex128, max)
