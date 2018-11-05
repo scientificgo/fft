@@ -85,7 +85,7 @@ func init() {
 func test(t *testing.T, inverse bool) {
 	dft := func(x []complex128) []complex128 { return dftDirect(x, inverse) }
 	fft := func(x []complex128) []complex128 { return Fft(x, inverse) }
-	testutils.Test(t, acc, [2](func([]complex128) []complex128){fft, dft}, cases)
+	testutils.Test(t, acc, cases, fft, dft)
 }
 
 func benchmark(b *testing.B, f func([]complex128, bool) []complex128, inverse bool) {
