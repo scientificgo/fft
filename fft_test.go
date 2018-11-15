@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	. "scientificgo.org/fft"
-	"scientificgo.org/testutils"
 	"testing"
+
+	. "scientificgo.org/fft"
+	"scientificgo.org/testutil"
 )
 
 const acc = 8 // significant figures
@@ -85,7 +86,7 @@ func init() {
 func test(t *testing.T, inverse bool) {
 	dft := func(x []complex128) []complex128 { return dftDirect(x, inverse) }
 	fft := func(x []complex128) []complex128 { return Fft(x, inverse) }
-	testutils.Test(t, acc, cases, fft, dft)
+	testutil.Test(t, acc, cases, fft, dft)
 }
 
 func benchmark(b *testing.B, f func([]complex128, bool) []complex128, inverse bool) {
