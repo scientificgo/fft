@@ -1,3 +1,3 @@
 module scientificgo.org/fft
 
-require scientificgo.org/testutils
+go 1.12
