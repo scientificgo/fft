@@ -9,10 +9,10 @@ go:
   - tip
 
 install:
-  - go get -t -v scientificgo.org/fft
+  - go get -t -v scientificgo.org/fft/...
 
 script:
-  - go test scientificgo.org/fft -v -race -coverprofile=coverage.txt -covermode=atomic -timeout 0
+  - go test scientificgo.org/fft/... -v -race -coverprofile=coverage.txt -covermode=atomic -timeout 0
 
 after_success:
   - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
