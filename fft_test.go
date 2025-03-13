@@ -7,14 +7,14 @@ package fft_test
 import (
 	"fmt"
 	"math"
+	"math/cmplx"
 	"math/rand"
 	"testing"
 
 	. "scientificgo.org/fft"
-	"scientificgo.org/testutil"
 )
 
-const acc = 8 // significant figures
+const tol = 1e-8
 
 var nslices = [][]int{
 	{2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384},
@@ -84,9 +84,21 @@ func init() {
 //
 
 func test(t *testing.T, inverse bool) {
-	dft := func(x []complex128) []complex128 { return dftDirect(x, inverse) }
-	fft := func(x []complex128) []complex128 { return Fft(x, inverse) }
-	testutil.Test(t, acc, cases, fft, dft)
+	for _, c := range cases {
+		fft := Fft(c.Input, inverse)
+		dft := dftDirect(c.Input, inverse)
+		if len(fft) == len(dft) {
+			for i, res := range fft {
+				diff := cmplx.Abs(res - dft[i])
+				ok := diff <= tol
+				if !ok {
+					t.Errorf("%v", diff)
+				}
+			}
+		} else {
+			t.Error("")
+		}
+	}
 }
 
 func benchmark(b *testing.B, f func([]complex128, bool) []complex128, inverse bool) {
@@ -99,7 +111,8 @@ func benchmark(b *testing.B, f func([]complex128, bool) []complex128, inverse bo
 	}
 }
 
-func TestFft(t *testing.T)        { test(t, false) }
-func TestIfft(t *testing.T)       { test(t, true) }
+func TestFft(t *testing.T)  { test(t, false) }
+func TestIfft(t *testing.T) { test(t, true) }
+
 func BenchmarkFft(b *testing.B)   { benchmark(b, Fft, false) }
 func BenchmarkIffti(b *testing.B) { benchmark(b, Fft, true) }
