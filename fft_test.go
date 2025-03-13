@@ -11,7 +11,7 @@ import (
 	"math/rand"
 	"testing"
 
-	. "scientificgo.org/fft"
+	. "github.com/scientificgo/fft"
 )
 
 const tol = 1e-8
